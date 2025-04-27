@@ -1,35 +1,58 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2'; // 👈 Import SweetAlert2
 
 const Register = ({ toggleView }) => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  const [status, setStatus] = useState('');
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const validateForm = () => {
-  const nameRegex = /^[a-zA-Z]{2,}(?: [a-zA-Z]{2,})?$/;
-  const emailRegex = /^[\w-\.]+@gmail\.com$/;
-  const passwordValid = formData.password.length >= 6;
-  return nameRegex.test(formData.name) && emailRegex.test(formData.email) && passwordValid;
+    const nameRegex = /^[a-zA-Z]{2,}(?: [a-zA-Z]{2,})?$/;
+    const emailRegex = /^[\w-\.]+@gmail\.com$/;
+    const passwordValid = formData.password.length >= 6;
+    return nameRegex.test(formData.name) && emailRegex.test(formData.email) && passwordValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
-      setStatus('Invalid input. Check name, email, or password.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Input',
+        text: 'Please enter a valid name, Gmail address, and password (6+ characters).',
+      });
       return;
     }
-    const res = await fetch('http://localhost:5000/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setStatus('Registration successful. Please log in.');
-      toggleView();
-    } else {
-      setStatus(data.msg || 'Registration failed');
+
+    try {
+      const res = await fetch('https://law-firm-backend-le55.onrender.com/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful!',
+          text: 'You can now log in to your account.',
+        });
+        toggleView(); // Switch to login view
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: data.msg || 'Something went wrong. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: 'Something went wrong. Please try again later.',
+      });
     }
   };
 
@@ -43,12 +66,14 @@ const Register = ({ toggleView }) => {
             onChange={handleChange}
             placeholder="Full Name"
             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
           />
           <input
             name="email"
             onChange={handleChange}
             placeholder="Email Address (@gmail.com only)"
             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
           />
           <input
             name="password"
@@ -56,6 +81,7 @@ const Register = ({ toggleView }) => {
             onChange={handleChange}
             placeholder="Password (6+ characters)"
             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
           />
           <button
             type="submit"
@@ -64,7 +90,6 @@ const Register = ({ toggleView }) => {
             Register
           </button>
         </form>
-        {status && <p className="mt-6 text-center text-sm text-red-600">{status}</p>}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{' '}

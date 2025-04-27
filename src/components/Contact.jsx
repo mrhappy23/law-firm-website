@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2'; // 👈 Import SweetAlert2
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -6,8 +7,6 @@ const Contact = () => {
     email: '',
     message: '',
   });
-
-  const [status, setStatus] = useState('');
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -18,29 +17,42 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setStatus('Sending...');
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch('https://law-firm-backend-le55.onrender.com/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        setStatus('Message sent!');
+        Swal.fire({
+          icon: 'success',
+          title: 'Message Sent!',
+          text: 'We have received your message and will get back to you soon.',
+          confirmButtonColor: '#3085d6',
+        });
         setFormData({ name: '', email: '', message: '' });
       } else {
-        setStatus('Failed to send message.');
+        const data = await response.json();
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: data.msg || 'Failed to send message. Please try again later.',
+        });
       }
     } catch (err) {
       console.error(err);
-      setStatus('Server error.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: 'Something went wrong. Please try again later.',
+      });
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md mt-12">
-      <h2 className="text-3xl font-bold mb-4 text-center">Contact Us</h2>
+      <h2 className="text-3xl font-bold mb-4 text-center text-blue-800">Contact Us</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
@@ -49,7 +61,7 @@ const Contact = () => {
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full p-3 border border-gray-300 rounded-md"
+          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
         />
         <input
           type="email"
@@ -58,7 +70,7 @@ const Contact = () => {
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full p-3 border border-gray-300 rounded-md"
+          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
         />
         <textarea
           name="message"
@@ -67,7 +79,7 @@ const Contact = () => {
           value={formData.message}
           onChange={handleChange}
           required
-          className="w-full p-3 border border-gray-300 rounded-md"
+          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:outline-none"
         />
         <button
           type="submit"
@@ -76,9 +88,6 @@ const Contact = () => {
           Send Message
         </button>
       </form>
-      {status && (
-        <p className="mt-4 text-center text-sm text-gray-600">{status}</p>
-      )}
     </div>
   );
 };

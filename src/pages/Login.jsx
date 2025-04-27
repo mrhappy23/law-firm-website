@@ -1,25 +1,45 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2'; // 👈 Import SweetAlert2
 
 const Login = ({ setUser, toggleView }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [status, setStatus] = useState('');
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      localStorage.setItem('token', data.token);
-      setUser(data.user);
-      setStatus('Login successful');
-    } else {
-      setStatus(data.msg || 'Login failed');
+    try {
+      const res = await fetch('https://law-firm-backend-le55.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        setUser(data.user);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful!',
+          text: `Welcome back, ${data.user.name}!`,
+          confirmButtonColor: '#3085d6',
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: data.msg || 'Invalid credentials',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Server Error',
+        text: 'Something went wrong. Please try again later.',
+      });
     }
   };
 
@@ -33,6 +53,7 @@ const Login = ({ setUser, toggleView }) => {
             onChange={handleChange}
             placeholder="Email Address"
             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
           />
           <input
             name="password"
@@ -40,6 +61,7 @@ const Login = ({ setUser, toggleView }) => {
             onChange={handleChange}
             placeholder="Password"
             className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            required
           />
           <button
             type="submit"
@@ -48,7 +70,6 @@ const Login = ({ setUser, toggleView }) => {
             Login
           </button>
         </form>
-        {status && <p className="mt-6 text-center text-sm text-red-600">{status}</p>}
 
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{' '}
